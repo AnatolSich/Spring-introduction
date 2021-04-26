@@ -5,25 +5,40 @@ import com.example.springintroduction.model.Ticket;
 import com.example.springintroduction.model.User;
 import com.example.springintroduction.service.EventService;
 import com.example.springintroduction.service.TicketService;
+import com.example.springintroduction.service.UserAccountService;
 import com.example.springintroduction.service.UserService;
+import com.example.springintroduction.util.TicketBatch;
+import com.example.springintroduction.util.XMLConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
 
-@Service
+@Component
 public class BookingFacadeImpl implements BookingFacade {
+
+    @Value("${ticket.booking}")
+    private String xmlFileName;
 
     private UserService userService;
     private EventService eventService;
     private TicketService ticketService;
+    private UserAccountService userAccountService;
+    private XMLConverter xmlConverter;
 
     @Autowired
-    public BookingFacadeImpl(UserService userService, EventService eventService, TicketService ticketService) {
+    public BookingFacadeImpl(UserService userService,
+                             EventService eventService,
+                             TicketService ticketService,
+                             UserAccountService userAccountService,
+                             XMLConverter xmlConverter) {
         this.userService = userService;
         this.eventService = eventService;
         this.ticketService = ticketService;
+        this.userAccountService = userAccountService;
+        this.xmlConverter = xmlConverter;
     }
 
     @Override
@@ -73,7 +88,9 @@ public class BookingFacadeImpl implements BookingFacade {
 
     @Override
     public User createUser(User user) {
-        return userService.createUser(user);
+        userService.createUser(user);
+        userAccountService.openAccount(user.getId());
+        return user;
     }
 
     @Override
@@ -106,4 +123,25 @@ public class BookingFacadeImpl implements BookingFacade {
         ticketService.cancelTicket(ticketId);
     }
 
+    @Override
+    public void refillAccount(long userID, double money) {
+        userAccountService.refillAccount(userID, money);
+    }
+
+    @Override
+    public void withdrawAccount(long userID, double money) {
+        userAccountService.withdrawAccount(userID, money);
+    }
+
+
+    @Override
+    public double getScore(long userId) {
+        return userAccountService.getScore(userId);
+    }
+
+    @Override
+    public void saveTicketsFromFile() {
+        TicketBatch tickets = (TicketBatch) xmlConverter.convertFromXMLToObject(xmlFileName);
+        ticketService.saveAllTickets(tickets.getTickets());
+    }
 }

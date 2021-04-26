@@ -1,6 +1,5 @@
 package com.example.springintroduction.model.impl;
 
-
 import com.example.springintroduction.model.User;
 
 public class UserImpl implements User {

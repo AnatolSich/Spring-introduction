@@ -1,6 +1,5 @@
 package com.example.springintroduction.facade;
 
-
 import com.example.springintroduction.model.Event;
 import com.example.springintroduction.model.Ticket;
 import com.example.springintroduction.model.User;
@@ -139,4 +138,11 @@ public interface BookingFacade {
      */
     void cancelTicket(long ticketId);
 
+    void refillAccount(long userID, double money);
+
+    void withdrawAccount(long userID, double money);
+
+    void saveTicketsFromFile();
+
+    double getScore(long userId);
 }

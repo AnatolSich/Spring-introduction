@@ -1,106 +1,124 @@
 package com.example.springintroduction;
 
+import com.example.springintroduction.dao.impl.EventDAO;
+import com.example.springintroduction.dao.impl.TicketDAO;
+import com.example.springintroduction.dao.impl.UserAccountDAO;
+import com.example.springintroduction.dao.impl.UserDAO;
 import com.example.springintroduction.facade.BookingFacade;
+import com.example.springintroduction.model.Event;
 import com.example.springintroduction.model.Ticket;
 import com.example.springintroduction.model.impl.EventImpl;
 import com.example.springintroduction.model.impl.UserImpl;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 @SpringBootTest
 class SpringIntroductionApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+	@Autowired
+	private UserDAO userDAO;
+	@Autowired
+	private EventDAO eventDAO;
+	@Autowired
+	private TicketDAO ticketDAO;
+	@Autowired
+	private UserAccountDAO userAccountDAO;
 	@Autowired
 	private BookingFacade bookingFacade;
 
-	@Test
-	public void createEventTest() {
-		bookingFacade.createEvent(new EventImpl(3, "AI", Date.from(Instant.now())));
-		Assert.assertNotNull(bookingFacade.getEventById(3));
+	private EmbeddedDatabase embeddedDatabase;
+
+	@Before
+	public void setUp() {
+		EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+		embeddedDatabase = builder
+				.setType(EmbeddedDatabaseType.H2)
+				.addScript("sql/schema.sql")
+				.addScript("sql/insert-data.sql")
+				.build();
+
+		userDAO.setDataSource(embeddedDatabase);
+		eventDAO.setDataSource(embeddedDatabase);
+		ticketDAO.setDataSource(embeddedDatabase);
+		userAccountDAO.setDataSource(embeddedDatabase);
 	}
 
 	@Test
-	public void createUserTest() {
-		bookingFacade.createUser(new UserImpl(2, "yurii", "yurii.gagarin@epam.com"));
-		Assert.assertNotNull(bookingFacade.getEventById(2));
+	public void bookTicketTest() {
+		bookingFacade.refillAccount(0, 150);
+		bookingFacade.bookTicket(0, 11, 111, Ticket.Category.PREMIUM);
+		bookingFacade.bookTicket(0, 33, 110, Ticket.Category.PREMIUM);
+		Assert.assertEquals(0, bookingFacade.getScore(0), 0);
 	}
 
 	@Test
-	public void createTicketTest() {
-		System.out.println("bookingFacade = " + bookingFacade);
-		System.out.println("bookingFacade.user = " + bookingFacade.getUserById(1));
-		bookingFacade.bookTicket(1, 2, 1, Ticket.Category.PREMIUM);
-		Assert.assertNotEquals(bookingFacade.getBookedTickets(bookingFacade.getUserById(1), 1, 1), Collections.emptyList());
+	public void bookTicketWithNewDataTest() {
+		bookingFacade.createUser(new UserImpl(3, "Yaroslav", "Yaroslav@epam.com"));
+		bookingFacade.createEvent(new EventImpl(44, "Tomorrow Land", Date.from(Instant.now()), 150));
+		bookingFacade.createEvent(new EventImpl(55, "Microservices with Spring Cloud", Date.from(Instant.now()), 50));
+		bookingFacade.refillAccount(3, 200);
+		bookingFacade.bookTicket(3, 44, 111, Ticket.Category.PREMIUM);
+		bookingFacade.bookTicket(3, 55, 110, Ticket.Category.PREMIUM);
+		Assert.assertEquals(0, bookingFacade.getScore(3), 0);
 	}
 
 	@Test
-	public void updateEventTest() {
-		bookingFacade.createEvent(new EventImpl(4, "AI", Date.from(Instant.now())));
-		bookingFacade.updateEvent(new EventImpl(4, "new title", Date.from(Instant.now())));
-		Assert.assertEquals(bookingFacade.getEventById(4).getTitle(), "new title");
+	public void bookTicketWhenNotEnoughMoney() {
+		try {
+			bookingFacade.bookTicket(2, 11, 1, Ticket.Category.PREMIUM);
+		} catch (IllegalArgumentException e) {
+			assertThat(e, instanceOf(IllegalArgumentException.class));
+		}
 	}
 
 	@Test
-	public void updateUserTest() {
-		bookingFacade.createUser(new UserImpl(3, "yurii", "yurii@epam.com"));
-		bookingFacade.updateUser(new UserImpl(3, "yurii", "yurii.gagarin@epam.com"));
-		Assert.assertEquals(bookingFacade.getUserByEmail("yurii.gagarin@epam.com").getId(), 3);
+	public void createAndUpdateUserTest() {
+		bookingFacade.createUser(new UserImpl(3, "Yaroslav", "none"));
+		bookingFacade.updateUser(new UserImpl(3, "Yaroslav", "Yaroslav@epam.com"));
+		Assert.assertEquals(3, bookingFacade.getUserByEmail("Yaroslav@epam.com").getId());
 	}
 
 	@Test
-	public void cancelTicketTest() {
-		bookingFacade.bookTicket(1, 2, 1, Ticket.Category.PREMIUM);
-		bookingFacade.getBookedTickets(bookingFacade.getUserById(1), 5, 1).forEach(v -> bookingFacade.cancelTicket(v.getId()));
-		Assert.assertEquals(bookingFacade.getBookedTickets(bookingFacade.getEventById(2), 1, 1), Collections.EMPTY_LIST);
+	public void createAndUpdateEventTest() {
+		bookingFacade.createEvent(new EventImpl(100, "JUG#Kharkiv", Date.from(Instant.now()), 200));
+
+		Event event = bookingFacade.getEventsByTitle("JUG#Kharkiv", 1, 0).get(0);
+		event.setPrice(100);
+		bookingFacade.updateEvent(event);
+
+		Assert.assertEquals(100, bookingFacade.getEventById(100).getPrice(), 0);
 	}
 
 	@Test
-	public void deleteEventTest() {
-		bookingFacade.createEvent(new EventImpl(5, "title", Date.from(Instant.now())));
-		bookingFacade.deleteEvent(5);
-		Assert.assertNull(bookingFacade.getEventById(5));
+	public void bookTicketAndCancel() {
+		bookingFacade.createEvent(new EventImpl(100, "JUG#Kharkiv", Date.from(Instant.now()), 200));
+		bookingFacade.createUser(new UserImpl(1111, "Yaroslav", "Yaroslav@epam.com"));
+		bookingFacade.refillAccount(1111, 200);
+		bookingFacade.bookTicket(1111, 100, 21, Ticket.Category.PREMIUM);
+
+		Ticket ticket = bookingFacade.getBookedTickets(bookingFacade.getUserById(1111), 1, 0).get(0);
+		bookingFacade.cancelTicket(ticket.getId());
+
+		Assert.assertEquals(Collections.EMPTY_LIST, bookingFacade.getBookedTickets(bookingFacade.getEventById(100), 1, 0));
 	}
 
-	@Test
-	public void deleteUserTest() {
-		bookingFacade.createUser(new UserImpl(5, "name", "name@mail.com"));
-		bookingFacade.deleteUser(5);
-		Assert.assertNull(bookingFacade.getEventById(5));
+	@After
+	public void tearDown() {
+		embeddedDatabase.shutdown();
 	}
-
-	@Test
-	public void getEventsByDataTest() {
-		Date date = Date.from(Instant.now());
-		bookingFacade.createEvent(new EventImpl(6, "event", date));
-		bookingFacade.createEvent(new EventImpl(8, "event1", date));
-		Assert.assertEquals(bookingFacade.getEventsForDay(date, 100, 0).size(), 2);
-	}
-
-	@Test
-	public void getUsersByNameTest() {
-		bookingFacade.createUser(new UserImpl(10, "Name", "name@mail.com"));
-		bookingFacade.createUser(new UserImpl(11, "Name", "name1@mail.com"));
-		bookingFacade.createUser(new UserImpl(12, "Name", "name2@mail.com"));
-		Assert.assertEquals(bookingFacade.getUsersByName("Name", 10, 0).size(), 3);
-	}
-
-	@Test
-	public void getEventsByTitleTest() {
-		bookingFacade.createEvent(new EventImpl(5, "title", Date.from(Instant.now())));
-		bookingFacade.createEvent(new EventImpl(6, "title", Date.from(Instant.now())));
-		bookingFacade.createEvent(new EventImpl(7, "title", Date.from(Instant.now())));
-		Assert.assertEquals(bookingFacade.getEventsByTitle("title", 10, 0).size(), 3);
-	}
-
 
 }

@@ -19,4 +19,9 @@ public interface Event {
     Date getDate();
 
     void setDate(Date date);
+
+    double getPrice();
+
+    void setPrice(double price);
+
 }

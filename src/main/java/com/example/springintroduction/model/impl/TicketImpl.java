@@ -1,6 +1,5 @@
 package com.example.springintroduction.model.impl;
 
-
 import com.example.springintroduction.model.Ticket;
 
 public class TicketImpl implements Ticket {

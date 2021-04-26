@@ -1,77 +1,77 @@
 package com.example.springintroduction.dao.impl;
 
 import com.example.springintroduction.dao.CrudRepository;
+import com.example.springintroduction.dao.mapping.EventMapper;
+import com.example.springintroduction.dao.sql.QueryContainer;
 import com.example.springintroduction.model.Event;
-import com.example.springintroduction.storage.Storage;
-import com.example.springintroduction.storage.StorageUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class EventDAO implements CrudRepository<Event, Long> {
 
-    private Storage<Event, Long> storage;
-    private StorageUtil<Event, Long> storageUtil;
+    private Logger log = LoggerFactory.getLogger(EventDAO.class);
 
-    @PostConstruct
-    public void initStorage() {
-        storage.patchUpdate(storageUtil.readCSV(StorageUtil.Model.EVENT));
-    }
+    private DataSource dataSource;
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public void setStorageUtil(StorageUtil<Event, Long> storageUtil) {
-        this.storageUtil = storageUtil;
-    }
-
-    @Autowired
-    public void setStorage(Storage<Event, Long> storage) {
-        this.storage = storage;
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
     @Override
     public Event save(Event event) {
-        return storage.update(event.getId(), event);
+        log.info("INSERT INTO public.event(id, title, date, price) VALUES " +
+                "(" + event.getId() + ", " + event.getTitle() + ", " + event.getDate() + ", " + event.getPrice() + ");");
+        jdbcTemplate.update(QueryContainer.INSERT_EVENT, event.getId(), event.getTitle(), event.getDate(), event.getPrice());
+        return event;
     }
 
     @Override
     public Event update(Event event) {
-        return storage.update(event.getId(), event);
+        log.info("UPDATE public.event SET title=" + event.getTitle() + ", " +
+                "date=" + event.getDate() + ", price=" + event.getPrice() + " WHERE id=" + event.getId() + ";");
+        jdbcTemplate.update(QueryContainer.UPDATE_EVENT_BY_ID, event.getTitle(), event.getDate(), event.getPrice(), event.getId());
+        return event;
     }
 
     @Override
     public Event findOne(Long id) {
-        return storage.findOne(id);
+        log.info("SELECT * FROM public.event WHERE id=" + id);
+        return jdbcTemplate.queryForObject(QueryContainer.SELECT_EVENT_BY_ID, new Object[]{id}, new EventMapper());
     }
 
     @Override
     public void delete(Long id) {
-        storage.delete(id);
+        log.info("DELETE FROM public.event WHERE id=" + id);
+        jdbcTemplate.update(QueryContainer.DELETE_EVENT_BY_ID, id);
     }
 
     @Override
     public Iterable<Event> findAll() {
-        return storage.findAll();
+        log.info(QueryContainer.SELECT_ALL_EVENTS);
+        return jdbcTemplate.query(QueryContainer.SELECT_ALL_EVENTS, new EventMapper());
     }
 
     public List<Event> getEventsByTitle(String title, int pageSize, int pageNum) {
-        List<Event> eventList = (List<Event>) storage.findAll();
-        return eventList.stream().filter(event -> event.getTitle().equals(title))
-                .skip(pageNum)
-                .limit(pageSize)
-                .collect(Collectors.toList());
+        log.info(QueryContainer.SELECT_EVENTS_BY_TITLE);
+        return jdbcTemplate.query(QueryContainer.SELECT_EVENTS_BY_TITLE,
+                new Object[]{title, pageNum * pageSize, pageSize}, new EventMapper());
     }
 
     public List<Event> getEventsForDay(Date day, int pageSize, int pageNum) {
-        List<Event> eventList = (List<Event>) storage.findAll();
-        return eventList.stream().filter(event -> event.getDate().equals(day))
-                .skip(pageNum)
-                .limit(pageSize)
-                .collect(Collectors.toList());
+        log.info(QueryContainer.SELECT_EVENTS_BY_DAY);
+        return jdbcTemplate.query(QueryContainer.SELECT_EVENTS_BY_DAY,
+                new Object[]{day, pageNum * pageSize, pageSize}, new EventMapper());
     }
 
 }

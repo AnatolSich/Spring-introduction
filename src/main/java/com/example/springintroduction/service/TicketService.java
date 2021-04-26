@@ -1,6 +1,5 @@
 package com.example.springintroduction.service;
 
-
 import com.example.springintroduction.model.Event;
 import com.example.springintroduction.model.Ticket;
 import com.example.springintroduction.model.User;
@@ -48,4 +47,6 @@ public interface TicketService {
      * @return Flag whether anything has been canceled.
      */
     void cancelTicket(long ticketId);
+
+    void saveAllTickets(List<Ticket> list);
 }

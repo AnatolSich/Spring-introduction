@@ -1,6 +1,5 @@
 package com.example.springintroduction.model.impl;
 
-
 import com.example.springintroduction.model.Event;
 
 import java.util.Date;
@@ -10,6 +9,7 @@ public class EventImpl implements Event {
     private long id;
     private String title;
     private Date date;
+    private double price;
 
     public EventImpl() {
     }
@@ -18,6 +18,13 @@ public class EventImpl implements Event {
         this.id = id;
         this.title = title;
         this.date = date;
+    }
+
+    public EventImpl(long id, String title, Date date, double price) {
+        this.id = id;
+        this.title = title;
+        this.date = date;
+        this.price = price;
     }
 
     @Override
@@ -48,6 +55,16 @@ public class EventImpl implements Event {
     @Override
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    @Override
+    public double getPrice() {
+        return price;
+    }
+
+    @Override
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     @Override

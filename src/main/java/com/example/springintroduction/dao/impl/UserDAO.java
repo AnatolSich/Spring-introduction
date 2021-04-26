@@ -1,75 +1,75 @@
 package com.example.springintroduction.dao.impl;
 
 import com.example.springintroduction.dao.CrudRepository;
+import com.example.springintroduction.dao.mapping.UserMapper;
+import com.example.springintroduction.dao.sql.QueryContainer;
 import com.example.springintroduction.model.User;
-import com.example.springintroduction.storage.Storage;
-import com.example.springintroduction.storage.StorageUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class UserDAO implements CrudRepository<User, Long> {
 
-    private Storage<User, Long> storage;
-    private StorageUtil<User, Long> storageUtil;
+    private Logger log = LoggerFactory.getLogger(UserDAO.class);
 
-    @PostConstruct
-    public void initStorage() {
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        storage.patchUpdate(storageUtil.readCSV(StorageUtil.Model.USER));
-    }
+    private DataSource dataSource;
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public void setStorageUtil(StorageUtil<User, Long> storageUtil) {
-        this.storageUtil = storageUtil;
-    }
-
-    @Autowired
-    public void setStorage(Storage<User, Long> storage) {
-        this.storage = storage;
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
     @Override
     public User save(User user) {
-        return storage.update(user.getId(), user);
+        log.info("INSERT INTO public.user(id, name, email) " +
+                "VALUES(" + user.getId() + ", " + user.getName() + ", " + user.getEmail() + ");");
+        jdbcTemplate.update(QueryContainer.INSERT_USER, user.getId(), user.getName(), user.getEmail());
+        return user;
     }
 
     @Override
     public User update(User user) {
-        return storage.update(user.getId(), user);
+        log.info("UPDATE public.user SET name=" + user.getName() + ", email=" + user.getEmail() + " WHERE id=" + user.getId() + ";");
+        jdbcTemplate.update(QueryContainer.UPDATE_USER_BY_ID, user.getName(), user.getEmail(), user.getId());
+        return user;
     }
 
     @Override
     public User findOne(Long id) {
-        return storage.findOne(id);
+        log.info("SELECT * FROM public.user WHERE id=" + id);
+        return jdbcTemplate.queryForObject(QueryContainer.SELECT_USER_BY_ID, new Object[]{id}, new UserMapper());
     }
 
     @Override
     public void delete(Long id) {
-        storage.delete(id);
+        log.info("DELETE FROM public.user WHERE id=" + id);
+        jdbcTemplate.update(QueryContainer.DELETE_USER_BY_ID, id);
     }
 
     @Override
     public Iterable<User> findAll() {
-        return storage.findAll();
-    }
-
-    public List<User> getUsersByName(String name, int pageSize, int pageNum) {
-        List<User> userList = (List<User>) storage.findAll();
-        return userList.stream().filter(user -> user.getName().equals(name))
-                .skip(pageNum)
-                .limit(pageSize)
-                .collect(Collectors.toList());
+        log.info(QueryContainer.SELECT_ALL_USERS);
+        return jdbcTemplate.query(QueryContainer.SELECT_ALL_USERS, new UserMapper());
     }
 
     public User getUserByEmail(String email) {
-        List<User> userList = (List<User>) storage.findAll();
-        return userList.stream().filter(user -> user.getEmail().equals(email)).collect(Collectors.toList()).get(0);
+        log.info(QueryContainer.SELECT_USER_BY_EMAIL);
+        return jdbcTemplate.queryForObject(QueryContainer.SELECT_USER_BY_EMAIL,
+                new Object[]{email}, new UserMapper());
     }
 
+    public List<User> getUsersByName(String name, int pageSize, int pageNum) {
+        log.info(QueryContainer.SELECT_USERS_BY_NAME);
+        return jdbcTemplate.query(QueryContainer.SELECT_USERS_BY_NAME,
+                new Object[]{name, pageNum * pageSize, pageSize}, new UserMapper());
+    }
 
 }
