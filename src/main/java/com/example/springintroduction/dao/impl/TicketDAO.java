@@ -9,6 +9,7 @@ import com.example.springintroduction.storage.StorageUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,7 @@ public class TicketDAO implements CrudRepository<Ticket, Long> {
     private Storage<Ticket, Long> storage;
     private StorageUtil<Ticket, Long> storageUtil;
 
+    @PostConstruct
     public void initStorage() {
         storage.patchUpdate(storageUtil.readCSV(StorageUtil.Model.TICKET));
     }
@@ -59,6 +61,9 @@ public class TicketDAO implements CrudRepository<Ticket, Long> {
 
     public List<Ticket> getBookedTickets(User user, int pageSize, int pageNum) {
         List<Ticket> ticketList = (List<Ticket>) storage.findAll();
+        System.out.println("ticketList = " + ticketList);
+        System.out.println("user = " + user);
+        System.out.println("user = " + user.getId());
         return ticketList.stream().filter(u -> u.getUserId() == user.getId())
                 .skip(pageNum)
                 .limit(pageSize)

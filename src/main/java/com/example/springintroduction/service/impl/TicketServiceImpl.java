@@ -25,7 +25,8 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<Ticket> getBookedTickets(User user, int pageSize, int pageNum) {
-       return ticketDAO.getBookedTickets(user, pageSize, pageNum);
+        System.out.println("ticketDAO =" + ticketDAO);
+        return ticketDAO.getBookedTickets(user, pageSize, pageNum);
     }
 
     @Override

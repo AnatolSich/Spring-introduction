@@ -7,6 +7,7 @@ import com.example.springintroduction.storage.StorageUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import javax.annotation.PostConstruct;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ public class EventDAO implements CrudRepository<Event, Long> {
     private Storage<Event, Long> storage;
     private StorageUtil<Event, Long> storageUtil;
 
+    @PostConstruct
     public void initStorage() {
         storage.patchUpdate(storageUtil.readCSV(StorageUtil.Model.EVENT));
     }

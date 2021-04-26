@@ -7,6 +7,7 @@ import com.example.springintroduction.storage.StorageUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,9 @@ public class UserDAO implements CrudRepository<User, Long> {
     private Storage<User, Long> storage;
     private StorageUtil<User, Long> storageUtil;
 
+    @PostConstruct
     public void initStorage() {
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         storage.patchUpdate(storageUtil.readCSV(StorageUtil.Model.USER));
     }
 
