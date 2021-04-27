@@ -23,10 +23,6 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public void refillAccount(long userID, double money) {
-        if (money < 0) {
-            throw new IllegalArgumentException("cannot refill account");
-        }
-
         double currentScore = userAccountDAO.findOne(userID).getScore();
         userAccountDAO.update(new UserAccount(userID, currentScore + money));
         log.info("Refill account-" + userID + " for " + money + "$");

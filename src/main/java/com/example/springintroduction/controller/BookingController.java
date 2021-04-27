@@ -42,7 +42,7 @@ public class BookingController {
         return modelAndView;
     }
 
-    @RequestMapping(value = "/user/{id}/tickets", method = RequestMethod.GET , consumes = {APPLICATION_PDF_VALUE})
+    @RequestMapping(value = "/user/{id}/tickets/pdf", method = RequestMethod.GET, consumes = {APPLICATION_PDF_VALUE} )
     public ResponseEntity<InputStreamResource> getPDFReport(@PathVariable long id) throws Exception {
         PDFGenerator.generatePDFEventReport(bookingFacade.getBookedTickets(bookingFacade.getUserById(id), 1, 0));
         ClassPathResource pdfFile = new ClassPathResource("pdf/test.pdf");

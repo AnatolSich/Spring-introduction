@@ -11,6 +11,7 @@ import com.example.springintroduction.util.TicketBatch;
 import com.example.springintroduction.util.XMLConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -29,18 +30,22 @@ public class BookingFacadeImpl implements BookingFacade {
     private TicketService ticketService;
     private UserAccountService userAccountService;
     private XMLConverter xmlConverter;
+    private JmsTemplate jmsTemplate;
+
 
     @Autowired
     public BookingFacadeImpl(UserService userService,
                              EventService eventService,
                              TicketService ticketService,
                              UserAccountService userAccountService,
-                             XMLConverter xmlConverter) {
+                             XMLConverter xmlConverter,
+                             JmsTemplate jmsTemplate) {
         this.userService = userService;
         this.eventService = eventService;
         this.ticketService = ticketService;
         this.userAccountService = userAccountService;
         this.xmlConverter = xmlConverter;
+        this.jmsTemplate = jmsTemplate;
     }
 
     @Override
@@ -152,6 +157,11 @@ public class BookingFacadeImpl implements BookingFacade {
         InputStream inputStream = new ByteArrayInputStream(stream);
         TicketBatch tickets = (TicketBatch) xmlConverter.convertFromXMLToObject(inputStream);
         ticketService.saveAllTickets(tickets.getTickets());
+    }
+
+    @Override
+    public void bookTicketAsync(Ticket ticket) {
+        jmsTemplate.convertAndSend("ticket-receiver", ticket);
     }
 
 }

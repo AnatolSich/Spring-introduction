@@ -150,4 +150,7 @@ public interface BookingFacade {
     void saveTicketsFromFile(byte[] stream) throws IOException, SAXException, ParserConfigurationException;
 
     double getScore(long userId);
+
+    void bookTicketAsync(Ticket ticket);
+
 }

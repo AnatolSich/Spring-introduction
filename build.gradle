@@ -26,6 +26,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'mockito:mockito-core:3.6.28'
+	implementation 'org.mockito:mockito-core:2.16.0'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.h2database:h2'
@@ -76,7 +78,23 @@ dependencies {
 
 	// https://mvnrepository.com/artifact/org.springframework/spring-oxm
 	implementation group: 'org.springframework', name: 'spring-oxm', version: '4.3.14.RELEASE'
+
+	// https://mvnrepository.com/artifact/org.springframework/spring-jms
+	implementation group: 'org.springframework', name: 'spring-jms', version: '5.3.5'
+
+	compile 'org.apache.geronimo.specs:geronimo-jms_1.1_spec:1.1.1'
+	// https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
+	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.6.0'
+
+	// https://mvnrepository.com/artifact/org.mockito/mockito-core
+	testImplementation  group: 'org.mockito', name: 'mockito-core', version: '2.16.0'
+
+// https://mvnrepository.com/artifact/org.mockito/mockito-all
+	testImplementation group: 'org.mockito', name: 'mockito-all', version: '1.10.19'
+
+
 }
+
 
 test {
 	useJUnitPlatform()

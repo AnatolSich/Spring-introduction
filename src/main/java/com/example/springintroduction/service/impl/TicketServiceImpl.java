@@ -52,7 +52,7 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<Ticket> getBookedTickets(Event event, int pageSize, int pageNum) {
-       return ticketDAO.getBookedTickets(event, pageSize, pageNum);
+        return ticketDAO.getBookedTickets(event, pageSize, pageNum);
     }
 
     @Override
