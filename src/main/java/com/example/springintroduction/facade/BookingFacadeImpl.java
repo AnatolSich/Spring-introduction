@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
@@ -144,4 +146,12 @@ public class BookingFacadeImpl implements BookingFacade {
         TicketBatch tickets = (TicketBatch) xmlConverter.convertFromXMLToObject(xmlFileName);
         ticketService.saveAllTickets(tickets.getTickets());
     }
+
+    @Override
+    public void saveTicketsFromFile(byte[] stream) {
+        InputStream inputStream = new ByteArrayInputStream(stream);
+        TicketBatch tickets = (TicketBatch) xmlConverter.convertFromXMLToObject(inputStream);
+        ticketService.saveAllTickets(tickets.getTickets());
+    }
+
 }

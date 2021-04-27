@@ -3,7 +3,10 @@ package com.example.springintroduction.facade;
 import com.example.springintroduction.model.Event;
 import com.example.springintroduction.model.Ticket;
 import com.example.springintroduction.model.User;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -143,6 +146,8 @@ public interface BookingFacade {
     void withdrawAccount(long userID, double money);
 
     void saveTicketsFromFile();
+
+    void saveTicketsFromFile(byte[] stream) throws IOException, SAXException, ParserConfigurationException;
 
     double getScore(long userId);
 }
